@@ -1,0 +1,3 @@
+#ffmpeg -i masa_live_base.mp4 -vf "drawtext=text='18.12.2023 08\:00':font=arial:fontsize=40:fontcolor=white:x=380:y=230" -c:a copy test.mp4
+ffmpeg -i masa_live_base.mp4 -filter_complex "[0:v]drawtext=fontfile=Lato-Light.ttf:text='18.12.23 08:00':fontsize=40:fontcolor=ffffff:alpha='if(lt(t,0),0,if(lt(t,2),(t-0)/2,if(lt(t,5),1,if(lt(t,10),(5-(t-5))/5,0))))':x=(w-text_w)/2:y=(h-text_h)/2" test.mp4
+#ffmpeg -i masa_live_base.mp4 -vf "drawtext=fontfile=./fonts/Geist-Medium.otf:text=hello:fontcolor=white:fontsize=45:box=1:boxcolor=#143D74:boxborderw=30:x=(w-text_w)/2:y=(h-text_h)/2" -codec:a copy test.mp4
