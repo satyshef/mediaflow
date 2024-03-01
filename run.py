@@ -13,14 +13,15 @@ from airflow.exceptions import AirflowSkipException
 import mediaflow.lib.sender as Sender
 import mediaflow.lib.helper as Helper
 
-MEDIA_SERVER_URL = 'http://81.200.154.127:5000/video'
+#MEDIA_SERVER_URL = 'http://81.200.154.127:5000/video'
+MEDIA_SERVER_URL = 'http://194.31.175.189:5000/video'
 BOT_TOKEN = "6078932856:AAHyPSOhwkUsCFW9Zw5v7y-sInZ2LH5a0sE"
 CID = "-1001950662813"
 MIN_NEWS_COUNT = 1
-NEWS_DIR = "./dags/mediaflow/news"
+NEWS_DIR = "./data/news"
 #PROJECT_DIR = "./dags/masa/projects"
 DAG_ID = "mediaflow"
-INTERVAL = timedelta(minutes=60)
+INTERVAL = timedelta(minutes=10)
 bot = Sender.TelegramWorker(BOT_TOKEN)
 
 @task.python
@@ -51,35 +52,6 @@ def get_news(news_dir):
     raise AirflowSkipException
     #raise ValueError('Empty news file list')
     #return None
-
-
-
-@task.python
-def _get_news(news_dir, project_dir):
-    files = Helper.files_in_directory(news_dir)
-    if len(files) == 0:
-        raise ValueError('Empty news file list')
-    for file in files:
-        file_name = Helper.get_file_name(file)
-        s = file_name.split(".")
-        #if len(s) != 2:
-        #    raise ValueError('Bad file name:', file_name)
-        project_name = s[0]
-        data = Helper.read_file_lines(file)
-        if data == None:
-            continue
-
-        project_file = project_dir + "/" + project_name + ".json"
-        project = Helper.read_file_json(project_file)
-        if project == None:
-            continue
-
-        project['name'] = project_name
-        project['file'] = file
-        project['data'] = data
-        return project
-    
-    return None
 
 @task.python
 def generate_media(news):
