@@ -40,11 +40,13 @@ def get_news(news_dir):
                     continue
                 project = {
                     'sample': project_name,
-                    'file': file,
+                    #'file': file,
                     'data': data,
                 }
                 return project
 
+    # Удаляем новостной файл. Проблема в том что если далее возникнит ошибка то пост теряется
+    os.remove(file)
     print('Empty news file list')
     raise AirflowSkipException
     #raise ValueError('Empty news file list')
@@ -108,8 +110,8 @@ def generate_post(news):
               "video_link": [news['url']]
      }
      # Удаляем новостной файл. Переделать
-     os.remove(news['file'])
-     print(post)
+     # os.remove(news['file'])
+     #print(post)
      return post
 
 
