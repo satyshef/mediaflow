@@ -44,10 +44,10 @@ def get_news(news_dir):
                     #'file': file,
                     'data': data,
                 }
+                # Удаляем новостной файл. Проблема в том что если далее возникнит ошибка то пост теряется
+                os.remove(file)
                 return project
-
-    # Удаляем новостной файл. Проблема в том что если далее возникнит ошибка то пост теряется
-    os.remove(file)
+            
     print('Empty news file list')
     raise AirflowSkipException
     #raise ValueError('Empty news file list')
