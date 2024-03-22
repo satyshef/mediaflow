@@ -55,6 +55,7 @@ def get_media_config(config_dir, sample_name):
 
 # если нет конфигурации для указанного семпла то в поле samle указывается имя семпла,
 # в таком случае будет применена установленная по умолчанию конфигурация семпла на t2v сервере
+@task.python
 def get_news(news_dir, min_news_count, config_dir = ''):
     news_ext = ['txt']
     files = Helper.files_in_directory(news_dir, news_ext)
