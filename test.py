@@ -4,40 +4,36 @@ import os
 import requests
 
 NEWS_DIR = '/Users/outsider/Source/Docker/airflow/data/news/masa_live_short'
-CONFIG_DIR = './config/'
+CONFIG_DIR = './config_example/'
 MIN_NEWS_COUNT = 1
 
-# читаем конфигурацию config_name из config_dir для samlpe_name
-# формат имени файла конфигурации <sample_name>.<config_name>(.<id>).json
-# если <sample_name> есть а <config_name> нет тошда подгружаем  <sample_name>.default.json
-def get_sample_config(config_dir, sample_name, config_name):
-    conf_default_name = 'default'
+# читаем конфигурацию из config_dir для samlpe_name
+# формат имени файла конфигурации <sample_name>(.<id>).json
+def get_media_config(config_dir, sample_name):
     conf_ext = 'json'
 
     if config_dir == '' or config_dir == None:
         return None
+    
     files = Helper.files_in_directory(config_dir, [conf_ext])
     if files == None or len(files)==0:
         return None
     
+   
     random.shuffle(files)
 
     for file in files:
         file_name = Helper.get_file_name(file)
         s = file_name.split(".")
-        if sample_name == s[0]:
-            # если есть указанная конфигурация то грузим ее иначе конфу по умолчанию
-            if config_name == s[1]:
-                config_path = file
-            else:
-                default = f"{sample_name}.{conf_default_name}.{conf_ext}"
-                config_path = os.path.join(config_dir, default)
-            config = Helper.read_file_json(config_path)
+        # если есть указанная конфигурация то грузим 
+        if sample_name == s[0]:    
+            config = Helper.read_file_json(file)
             if config != None:
                 return config
+            
     return None
 
-# если нет конфигурации для указанного семпла то данные отправляем без поля config,
+# если нет конфигурации для указанного семпла то в поле samle указывается имя семпла,
 # в таком случае будет применена установленная по умолчанию конфигурация семпла на t2v сервере
 def get_news(news_dir, min_news_count, config_dir = ''):
     news_ext = ['txt']
@@ -48,7 +44,7 @@ def get_news(news_dir, min_news_count, config_dir = ''):
             file_name = Helper.get_file_name(file)
             s = file_name.split(".")
             sample_name = s[0]
-            config_name = s[1]
+            #config_name = s[1]
 
             data = Helper.read_file_lines(file)
             if data == None:
@@ -56,23 +52,19 @@ def get_news(news_dir, min_news_count, config_dir = ''):
             if len(data) < min_news_count:
                 continue
 
-            sample_config = get_sample_config(config_dir, sample_name, config_name)
-            if sample_config == None:
-                project = {
+            media_config = get_media_config(config_dir, sample_name)
+            if media_config == None or 'sample' not in media_config:
+                media_config = {
                     'sample': sample_name,
                     'data': data,
                 }
             else:
-                project = {
-                    'sample': sample_name,
-                    'config': sample_config,
-                    'data': data,
-                }
+                media_config['data'] = data
 
             #print(project)
             # Удаляем новостной файл. Проблема в том что если далее возникнит ошибка то пост теряется
             #os.remove(file)
-            return project
+            return media_config
         
 
 def send_to_t2v(data):
@@ -90,9 +82,17 @@ def send_to_t2v(data):
     # Печать ответа от сервера
     #print("Ответ сервера:", response.text)
 
+
+#config = get_media_config(CONFIG_DIR, 'short_news')
+#print(config)
+
 news = get_news(NEWS_DIR, MIN_NEWS_COUNT, CONFIG_DIR)
+print(news)
 send_to_t2v(news)
-#print(news)
+
+
+#config = Helper.read_file_json("/Users/outsider/Source/Docker/airflow/dags/mediaflow/config_example/short_news.default.json")
+#print(config['sender'])
 
 #files = Helper.files_in_directory('./news')
 #print(files)

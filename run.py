@@ -20,7 +20,7 @@ BOT_TOKEN = "6078932856:AAHyPSOhwkUsCFW9Zw5v7y-sInZ2LH5a0sE"
 CID = "-1001950662813"
 MIN_NEWS_COUNT = 1
 NEWS_DIR = "./data/news/"
-CONFIG_DIR = "./data/sample_config/"
+CONFIG_DIR = "./data/media_config/"
 #PROJECT_DIR = "./dags/masa/projects"
 DAG_ID = "mediaflow"
 INTERVAL = timedelta(minutes=10)
@@ -30,7 +30,7 @@ bot = Sender.TelegramWorker(BOT_TOKEN)
 # читаем конфигурацию config_name из config_dir для samlpe_name
 # формат имени файла конфигурации <sample_name>.<config_name>(.<id>).json
 # если <sample_name> есть а <config_name> нет тошда подгружаем  <sample_name>.default.json
-def get_sample_config(config_dir, sample_name, config_name):
+def get_media_config(config_dir, sample_name, config_name):
     conf_default_name = 'default'
     conf_ext = 'json'
 
@@ -58,9 +58,8 @@ def get_sample_config(config_dir, sample_name, config_name):
     return None
 
 
-# если нет конфигурации для указанного семпла то данные отправляем без поля config,
+# если нет конфигурации для указанного семпла то в поле samle указывается имя семпла,
 # в таком случае будет применена установленная по умолчанию конфигурация семпла на t2v сервере
-@task.python
 def get_news(news_dir, min_news_count, config_dir = ''):
     news_ext = ['txt']
     files = Helper.files_in_directory(news_dir, news_ext)
@@ -70,7 +69,7 @@ def get_news(news_dir, min_news_count, config_dir = ''):
             file_name = Helper.get_file_name(file)
             s = file_name.split(".")
             sample_name = s[0]
-            config_name = s[1]
+            #config_name = s[1]
 
             data = Helper.read_file_lines(file)
             if data == None:
@@ -78,25 +77,20 @@ def get_news(news_dir, min_news_count, config_dir = ''):
             if len(data) < min_news_count:
                 continue
 
-            sample_config = get_sample_config(config_dir, sample_name, config_name)
-            if sample_config == None:
-                project = {
+            media_config = get_media_config(config_dir, sample_name)
+            if media_config == None or 'sample' not in media_config:
+                media_config = {
                     'sample': sample_name,
                     'data': data,
                 }
             else:
-                project = {
-                    'sample': sample_name,
-                    'config': sample_config,
-                    'data': data,
-                }
+                media_config['data'] = data
 
+            #print(project)
             # Удаляем новостной файл. Проблема в том что если далее возникнит ошибка то пост теряется
             os.remove(file)
-            return project
-
-    print('Empty news file list')
-    raise AirflowSkipException
+            return media_config
+        
 
 
 def __get_news(news_dir):
@@ -145,18 +139,26 @@ def generate_media(news):
 
 @task.python
 def generate_post(news):
-     text = "#%s" % news['sample']
-     text = text.replace('_', '\_')
-     post = {
-              "text": text,
-              "link": "none",
-              "foto_link": [],
-              "video_link": [news['url']]
-     }
-     # Удаляем новостной файл. Переделать
-     # os.remove(news['file'])
-     #print(post)
-     return post
+    # Проверяем нужно ли отправлять пост
+    if 'sender' in news and 'enable' in news['sender'] and news['sender']['enable'] == False:
+        raise AirflowSkipException
+    
+    if isinstance(news.get('sample'), str):
+        text = "#%s" % news['sample']
+    else:
+        text = "#%s" % news['sample']['name']
+
+    text = text.replace('_', '\_')
+    post = {
+            "text": text,
+            "link": "none",
+            "foto_link": [],
+            "video_link": [news['url']]
+    }
+    # Удаляем новостной файл. Переделать
+    # os.remove(news['file'])
+    #print(post)
+    return post
 
 
 @task.python
