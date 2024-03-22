@@ -85,7 +85,9 @@ def get_news(news_dir, min_news_count, config_dir = ''):
             # Удаляем новостной файл. Проблема в том что если далее возникнит ошибка то пост теряется
             os.remove(file)
             return media_config
-        
+    
+    print('Empty news file list')
+    raise AirflowSkipException   
 
 
 def __get_news(news_dir):
