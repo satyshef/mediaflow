@@ -42,16 +42,6 @@ def delete_file(file_path):
     except OSError as e:
         print(f"Ошибка при удалении файла: {e}")
 
-
-def files_in_directory(directory):
-    # Получить список файлов в директории
-    files = [os.path.join(directory, file) for file in os.listdir(directory) if os.path.isfile(os.path.join(directory, file))]
-    
-    # Отсортировать список файлов по времени модификации
-    sorted_files = sorted(files, key=lambda x: os.path.getmtime(x), reverse=False)
-    return sorted_files
-
-
 #получить самый старый файл в директории
 def oldest_file_in_directory(directory):
     files = os.listdir(directory)
@@ -98,3 +88,36 @@ def read_file_json(file_path):
     except json.JSONDecodeError as e:
         print(f"Ошибка при декодировании JSON: {e}")
     return None
+
+def files_in_directory(directory, extensions = "*"):
+    """
+    Функция фильтрует файлы в указанной директории по расширениям.
+
+    Аргументы:
+    directory_path (str): Путь к директории.
+    extensions (list): Список расширений файлов для фильтрации.
+
+    Возвращает:
+    list: Список файлов с указанными расширениями в указанной директории.
+    """
+    if not os.path.isdir(directory):
+        return None
+
+    filtered_files = []
+    for file in os.listdir(directory):
+        if os.path.isfile(os.path.join(directory, file)):
+            if extensions == "*" or extensions == '' or (any(file.endswith(ext) for ext in extensions)):
+                file_path = os.path.join(directory, file)
+                if os.path.isfile(file_path):
+                    filtered_files.append(file_path)
+    filtered_files.sort()
+    return filtered_files
+
+
+def ___files_in_directory(directory):
+    # Получить список файлов в директории
+    files = [os.path.join(directory, file) for file in os.listdir(directory) if os.path.isfile(os.path.join(directory, file))]
+    
+    # Отсортировать список файлов по времени модификации
+    sorted_files = sorted(files, key=lambda x: os.path.getmtime(x), reverse=False)
+    return sorted_files
