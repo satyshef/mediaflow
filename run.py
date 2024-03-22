@@ -23,38 +23,33 @@ NEWS_DIR = "./data/news/"
 CONFIG_DIR = "./data/media_config/"
 #PROJECT_DIR = "./dags/masa/projects"
 DAG_ID = "mediaflow"
-INTERVAL = timedelta(minutes=10)
+INTERVAL = timedelta(minutes=5)
 bot = Sender.TelegramWorker(BOT_TOKEN)
 
-
-# читаем конфигурацию config_name из config_dir для samlpe_name
-# формат имени файла конфигурации <sample_name>.<config_name>(.<id>).json
-# если <sample_name> есть а <config_name> нет тошда подгружаем  <sample_name>.default.json
-def get_media_config(config_dir, sample_name, config_name):
-    conf_default_name = 'default'
+# читаем конфигурацию из config_dir для samlpe_name
+# формат имени файла конфигурации <sample_name>(.<id>).json
+def get_media_config(config_dir, sample_name):
     conf_ext = 'json'
 
     if config_dir == '' or config_dir == None:
         return None
+    
     files = Helper.files_in_directory(config_dir, [conf_ext])
     if files == None or len(files)==0:
         return None
     
+   
     random.shuffle(files)
 
     for file in files:
         file_name = Helper.get_file_name(file)
         s = file_name.split(".")
-        if sample_name == s[0]:
-            # если есть указанная конфигурация то грузим ее иначе конфу по умолчанию
-            if config_name == s[1]:
-                config_path = file
-            else:
-                default = f"{sample_name}.{conf_default_name}.{conf_ext}"
-                config_path = os.path.join(config_dir, default)
-            config = Helper.read_file_json(config_path)
+        # если есть указанная конфигурация то грузим 
+        if sample_name == s[0]:    
+            config = Helper.read_file_json(file)
             if config != None:
                 return config
+            
     return None
 
 
